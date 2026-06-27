@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ct-translate — Claude Code だけで組む治験翻訳ハーネス</title>
+<style>
+  :root{ --bg:#faf9f5; --card:#ffffff; --ink:#2c2c2a; --muted:#5f5e5a; --line:#e3e1d8; }
+  @media (prefers-color-scheme: dark){ :root{ --bg:#1c1b19; --line:#3a3833; } body{color:#e8e6df} .meta,.lede,footer{color:#b8b6ad!important} h1,h2{color:#e8e6df!important} }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI","Hiragino Sans","Noto Sans JP",sans-serif;
+    line-height:1.75;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:800px;margin:0 auto;padding:40px 22px 80px}
+  header{border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:28px}
+  h1{font-size:25px;font-weight:600;margin:0 0 8px}
+  .meta{font-size:13px;color:var(--muted)}
+  h2{font-size:19px;font-weight:600;margin:40px 0 6px}
+  .lede{font-size:14px;color:var(--muted);margin:0 0 14px}
+  p{font-size:15px;margin:10px 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:14px 12px;margin:14px 0 8px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .card svg{display:block;width:100%;height:auto}
+  ul{font-size:14.5px;margin:8px 0;padding-left:20px} li{margin:5px 0}
+  table{border-collapse:collapse;width:100%;font-size:14px;margin:12px 0}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:rgba(127,119,221,.10);font-weight:500}
+  code{background:rgba(127,119,221,.14);padding:1px 5px;border-radius:5px;font-size:13px}
+  .pill{display:inline-block;font-size:11px;padding:2px 9px;border-radius:20px;margin-right:6px;font-weight:500}
+  .p-teal{background:#e1f5ee;color:#085041}.p-red{background:#fcebeb;color:#791f1f}.p-purple{background:#eeedfe;color:#3c3489}
+  footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+  svg text{font-family:inherit}
+  .t{font-size:14px;fill:#2c2c2a}.ts{font-size:12px;fill:#5f5e5a}.th{font-size:14px;font-weight:500}
+  .c-teal>rect,rect.c-teal{fill:#e1f5ee;stroke:#0f6e56;stroke-width:.5}.c-teal .th{fill:#085041}.c-teal .ts{fill:#0f6e56}
+  .c-red>rect,rect.c-red{fill:#fcebeb;stroke:#a32d2d;stroke-width:.5}.c-red .th{fill:#791f1f}.c-red .ts{fill:#a32d2d}
+  .c-purple>rect,rect.c-purple{fill:#eeedfe;stroke:#534ab7;stroke-width:.5}.c-purple .th{fill:#3c3489}.c-purple .ts{fill:#534ab7}
+  .arr{stroke:#5f5e5a;stroke-width:1.5;fill:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>ct-translate — Claude Code だけで組む治験翻訳ハーネス</h1>
+  <div class="meta">Foundry/Azure 不要。<i>files ＋ サブエージェント ＋ git</i> だけで「用語集準拠 ＋ 逆翻訳投票検証 ＋ 出典紐付け」の治験文書翻訳を回す最小設計。<br>2026-06-27 ／ 合成ダミーによる方法論デモ（実データ・秘密情報は含まない）</div>
+</header>
+
+<p>大規模プラットフォーム（PCI / Microsoft Foundry）でやっていた翻訳プロセスを、リポジトリ内のファイルと git に畳んだもの。色は
+  <span class="pill p-teal">Claude が自動実行</span>
+  <span class="pill p-red">人間・git（HITL＋監査）</span>
+  <span class="pill p-purple">MD ファイル（用語集・メモリ）</span></p>
+
+<h2>処理フロー</h2>
+<p class="lede">「プラットフォーム」が全部リポジトリ内のファイルと git に畳まれている。<code>git log</code> がそのまま改ざん検知付きの監査台帳になる。</p>
+<div class="card">
+<svg viewBox="0 0 680 706" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Claude Code だけで組む治験文書翻訳ハーネスの処理フロー</title>
+<desc>Skill が手順を持ち、用語集 MD を grep で注入、サブエージェントで並列翻訳、逆翻訳で投票検証、全文整合と再翻訳ループ、人間が diff 承認、git commit で確定と監査証跡、memory に追記して用語集に還流。</desc>
+<defs><marker id="arC" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g class="c-teal"><rect x="80" y="48" width="280" height="48" rx="8"/><text class="th" x="220" y="69" text-anchor="middle">⓪ 原文読込→Mode 判定</text><text class="ts" x="220" y="85" text-anchor="middle">Skill（SKILL.md）が手順</text></g>
+<line class="arr" x1="220" y1="96" x2="220" y2="118" marker-end="url(#arC)"/>
+<g class="c-teal"><rect x="80" y="120" width="280" height="48" rx="8"/><text class="th" x="220" y="141" text-anchor="middle">① 用語を grep で注入</text><text class="ts" x="220" y="157" text-anchor="middle">該当語だけ JIT 読込</text></g>
+<line class="arr" x1="220" y1="168" x2="220" y2="190" marker-end="url(#arC)"/>
+<g class="c-teal"><rect x="80" y="192" width="280" height="48" rx="8"/><text class="th" x="220" y="213" text-anchor="middle">② 翻訳（サブエージェント並列）</text><text class="ts" x="220" y="229" text-anchor="middle">Claude／セクション並列</text></g>
+<line class="arr" x1="220" y1="240" x2="220" y2="262" marker-end="url(#arC)"/>
+<g class="c-teal"><rect x="80" y="264" width="280" height="56" rx="8"/><text class="th" x="220" y="286" text-anchor="middle">③ 逆翻訳で投票検証</text><text class="ts" x="220" y="304" text-anchor="middle">懐疑エージェント N体／過半で採否</text></g>
+<line class="arr" x1="220" y1="320" x2="220" y2="342" marker-end="url(#arC)"/>
+<g class="c-teal"><rect x="80" y="344" width="280" height="48" rx="8"/><text class="th" x="220" y="365" text-anchor="middle">④ 全文で用語統一＋再翻訳 loop</text><text class="ts" x="220" y="381" text-anchor="middle">訳ブレ検出→loop-until-dry</text></g>
+<path d="M80 368 C 48 368 44 300 44 280 C 44 250 48 218 78 216" fill="none" stroke="#1d9e75" stroke-width="0.5" stroke-dasharray="5 4" marker-end="url(#arC)"/>
+<line class="arr" x1="220" y1="392" x2="220" y2="414" marker-end="url(#arC)"/>
+<g class="c-red"><rect x="80" y="416" width="280" height="48" rx="8"/><text class="th" x="220" y="437" text-anchor="middle">⑤ 人間が diff 承認（Mode C）</text><text class="ts" x="220" y="453" text-anchor="middle">HITL＝コミット前レビュー</text></g>
+<line class="arr" x1="220" y1="464" x2="220" y2="486" marker-end="url(#arC)"/>
+<g class="c-red"><rect x="80" y="488" width="280" height="48" rx="8"/><text class="th" x="220" y="509" text-anchor="middle">⑥ git commit</text><text class="ts" x="220" y="525" text-anchor="middle">確定＋監査証跡（改ざん検知）</text></g>
+<line class="arr" x1="220" y1="536" x2="220" y2="558" marker-end="url(#arC)"/>
+<g class="c-purple"><rect x="80" y="560" width="280" height="46" rx="8"/><text class="th" x="220" y="581" text-anchor="middle">⑦ memory.md に追記</text><text class="ts" x="220" y="597" text-anchor="middle">確定対訳を蓄積</text></g>
+<rect x="400" y="120" width="250" height="300" rx="8" fill="none" stroke="#7f77dd" stroke-width="0.5" stroke-dasharray="5 4"/>
+<text class="th" x="414" y="140" text-anchor="start">用語集 ＝ MD ファイル群</text>
+<g class="c-purple"><rect x="414" y="150" width="222" height="64" rx="6"/><text class="th" x="525" y="178" text-anchor="middle">glossary/ の MD</text><text class="ts" x="525" y="196" text-anchor="middle">P0 顧客→P3 公式 の優先順</text></g>
+<g class="c-purple"><rect x="414" y="252" width="222" height="52" rx="6"/><text class="th" x="525" y="274" text-anchor="middle">未知語は web 参照</text><text class="ts" x="525" y="292" text-anchor="middle">MedDRA/JPMA→取得後キャッシュ</text></g>
+<path d="M525 252 L525 218" fill="none" stroke="#7f77dd" stroke-width="0.5" stroke-dasharray="5 4" marker-end="url(#arC)"/>
+<text class="ts" x="533" y="238" text-anchor="start">追記</text>
+<path d="M414 180 L362 142" fill="none" stroke="#7f77dd" stroke-width="0.5" marker-end="url(#arC)"/>
+<path d="M360 583 C 446 578 470 470 470 422" fill="none" stroke="#7f77dd" stroke-width="0.5" stroke-dasharray="5 4" marker-end="url(#arC)"/>
+<text class="ts" x="368" y="600" text-anchor="start">用語集へ昇格</text>
+<rect class="c-teal" x="80" y="626" width="13" height="13" rx="3"/><text class="ts" x="99" y="636" text-anchor="start">Claude／サブエージェントが実行（⓪〜④）</text>
+<rect class="c-red" x="80" y="648" width="13" height="13" rx="3"/><text class="ts" x="99" y="658" text-anchor="start">人間・git（⑤⑥＝HITL＋監査証跡）</text>
+<rect class="c-purple" x="80" y="670" width="13" height="13" rx="3"/><text class="ts" x="99" y="680" text-anchor="start">MD ファイル＝用語集・メモリ（grep で利用／追記で構築）</text>
+</svg>
+</div>
+
+<h2>各プロセスの仕組み</h2>
+<ul>
+<li><b>⓪ Mode 判定</b> … <code>SKILL.md</code> の手順を Claude が読んで実行。文書タイプから Mode A/B/C と方向（JA⇄EN）を決める。これが「ハーネス」の本体。</li>
+<li><b>① 用語注入</b> … 原文の用語を <code>glossary/*.md</code> から grep し、該当語だけ読む（JIT）。AdaptCT の「お手本注入」に相当、インデックス構築は不要。</li>
+<li><b>② 翻訳</b> … セクションをサブエージェントで並列翻訳。①の訳語を制約として渡す。</li>
+<li><b>③ 逆翻訳で投票検証</b> … 独立サブエージェントが原言語に逆翻訳し、原文との意味等価を投票。過半で不一致なら棄却。<b>翻訳役と検証役を分ける＝生成と検証の分離</b>。</li>
+<li><b>④ 整合＋loop</b> … 全文で用語のブレを統一。弱い訳は②へ戻し、新規ゼロまで反復。</li>
+<li><b>⑤ HITL 承認</b> … High 文書は人間が <code>git diff</code> を見て承認。「コミット前レビュー」がそのまま規制の承認ゲート。</li>
+<li><b>⑥ git commit</b> … 確定の瞬間。<code>git log</code> が改ざん検知付きの監査台帳になる（Part 11 を別途作らずに満たす）。</li>
+<li><b>⑦ フライホイール</b> … 確定対訳を <code>memory.md</code> に追記→用語集に昇格。回を追うごとに人手修正率が下がる。</li>
+</ul>
+
+<h2>移植と精度の鉄則</h2>
+<p class="lede">この設計の肝：<b>アカウントは自由に変えてよい。モデルは固定し、変えるときは変更管理（リバリデーション）。</b></p>
+<table>
+<tr><th>変更</th><th>出力精度への影響</th></tr>
+<tr><td>Claude <b>アカウント</b>（個人→会社）／<b>ホスト</b>（PC→サーバ）／<b>API 経由</b>（Anthropic 直 ↔ Foundry ↔ Bedrock、同一モデル）</td><td><b>変わらない</b>（鍵・場所が変わるだけ。同一モデルなら実質同等）</td></tr>
+<tr><td><b>モデルそのもの</b>を変える（Claude→他、Opus→Haiku）／<b>モデルのバージョン</b>が変わる</td><td><b>変わる</b>（モデルは品質の最大の決定要因）</td></tr>
+</table>
+<p>ハーネス（用語集・ガードレール・逆翻訳投票）は精度を<b>モデル非依存の方向に安定させる</b>が、生の流暢さ・ニュアンスはモデル依存が残る。期待値は「同じ訳文が毎回出る」ではなく<b>「品質が毎回担保される」</b>——LLM は同条件でもビット単位では揺れ、用語集＋逆翻訳投票がその揺れを critical な軸で抑える。本番では使用モデルとバージョンを <b>pin</b> し、変更時は 4 段ラダーで再評価する。</p>
+
+<h2>「何がどれだけ効くか」を測る — 4 段ラダー実験</h2>
+<p class="lede">同じ原文に層を1つずつ足し、用語集と検証の寄与を数値化する。</p>
+<table>
+<tr><th>段</th><th>用語集</th><th>SKILL.md</th><th>逆翻訳投票</th><th>確かめること</th></tr>
+<tr><td>0 素訳</td><td>✗</td><td>✗</td><td>✗</td><td>モデル交換そのものの差（基準線）</td></tr>
+<tr><td>1 ＋用語集</td><td>✓</td><td>✗</td><td>✗</td><td>用語の一貫性・指定訳の遵守</td></tr>
+<tr><td>2 ＋SKILL</td><td>✓</td><td>✓</td><td>✗</td><td>プロセス整備（出典・Mode 判定）</td></tr>
+<tr><td>3 ＋DW</td><td>✓</td><td>✓</td><td>✓</td><td>意味欠落・義務弱化の検出</td></tr>
+</table>
+
+<h2>用語集の構築と利用</h2>
+<ul>
+<li><b>構築（3経路）</b>：① 顧客指定訳を手入力（P0）／② 確定訳が <code>memory.md</code>→<code>p2-house.md</code> に昇格（自動で太る）／③ 未知語だけ web 参照し取得訳を <code>p3-official.md</code> に追記（キャッシュ）</li>
+<li><b>利用</b>：grep して P0→P1→P2→P3 の<b>先勝ち</b>。層間不一致は <code>⚠️要確認</code> で人間へ</li>
+<li><b>原則</b>：<b>毎回 web を引かない</b>。答えはローカルに固定（訳ブレ＝フライホイール破綻を防ぐ）。決定論的に固定すべき情報を確率的経路に乗せない</li>
+</ul>
+
+<footer>
+方法論デモ。合成ダミーのみで、実データ・秘密情報・API キーは含みません（秘密は <code>.gitignore</code> で除外）。<br>
+構成: <code>.claude/skills/translate/SKILL.md</code>（手順）／<code>CLAUDE.md</code>（ガードレール）／<code>glossary/</code>（用語集）／<code>sources/</code>（合成原文）／<code>experiments/run-log.md</code>（4段ラダー）
+</footer>
+</div>
+</body>
+</html>

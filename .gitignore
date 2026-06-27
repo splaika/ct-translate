@@ -1,0 +1,12 @@
+# 秘密情報は絶対にコミットしない（API キーは環境変数で渡す）
+.env
+.env.*
+*.key
+*.pem
+secrets/
+.claude/settings.local.json
+
+# 一時物
+*.tmp
+*.log
+.DS_Store
