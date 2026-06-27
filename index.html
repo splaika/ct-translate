@@ -7,7 +7,7 @@
 <title>ct-translate — Claude Code だけで組む治験翻訳ハーネス</title>
 <style>
   :root{ --bg:#faf9f5; --card:#ffffff; --ink:#2c2c2a; --muted:#5f5e5a; --line:#e3e1d8; }
-  @media (prefers-color-scheme: dark){ :root{ --bg:#1c1b19; --line:#3a3833; } body{color:#e8e6df} .meta,.lede,footer{color:#b8b6ad!important} h1,h2{color:#e8e6df!important} }
+  /* ライトテーマ固定（どの環境でも一定の可読性を担保） */
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);
     font-family:system-ui,-apple-system,"Segoe UI","Hiragino Sans","Noto Sans JP",sans-serif;
@@ -18,15 +18,15 @@
   .meta{font-size:13px;color:var(--muted)}
   h2{font-size:19px;font-weight:600;margin:40px 0 6px}
   .lede{font-size:14px;color:var(--muted);margin:0 0 14px}
-  p{font-size:15px;margin:10px 0}
+  p{font-size:15px;margin:10px 0;color:var(--ink)}
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
     padding:14px 12px;margin:14px 0 8px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
   .card svg{display:block;width:100%;height:auto}
-  ul{font-size:14.5px;margin:8px 0;padding-left:20px} li{margin:5px 0}
+  ul{font-size:14.5px;margin:8px 0;padding-left:20px;color:var(--ink)} li{margin:5px 0}
   table{border-collapse:collapse;width:100%;font-size:14px;margin:12px 0}
-  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
-  th{background:rgba(127,119,221,.10);font-weight:500}
-  code{background:rgba(127,119,221,.14);padding:1px 5px;border-radius:5px;font-size:13px}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top;color:var(--ink)}
+  th{background:#f0eef9;font-weight:500;color:#3c3489}
+  code{background:#efedfb;color:#3c3489;padding:1px 5px;border-radius:5px;font-size:13px}
   .pill{display:inline-block;font-size:11px;padding:2px 9px;border-radius:20px;margin-right:6px;font-weight:500}
   .p-teal{background:#e1f5ee;color:#085041}.p-red{background:#fcebeb;color:#791f1f}.p-purple{background:#eeedfe;color:#3c3489}
   footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
