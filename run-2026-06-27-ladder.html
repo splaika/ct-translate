@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>実行例：4段ラダー実走ログ — ct-translate</title>
+<style>
+  :root{ --bg:#faf9f5; --card:#ffffff; --ink:#2c2c2a; --muted:#5f5e5a; --line:#e3e1d8; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI","Hiragino Sans","Noto Sans JP",sans-serif;
+    line-height:1.75;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:820px;margin:0 auto;padding:40px 22px 80px}
+  header{border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:24px}
+  h1{font-size:24px;font-weight:600;margin:0 0 8px;color:var(--ink)}
+  .meta{font-size:13px;color:var(--muted)}
+  a{color:#185fa5}
+  h2{font-size:18px;font-weight:600;margin:34px 0 8px;color:var(--ink)}
+  h3{font-size:15px;font-weight:600;margin:0 0 6px;color:var(--ink)}
+  p{font-size:15px;margin:10px 0;color:var(--ink)}
+  .lede{font-size:14px;color:var(--muted);margin:0 0 12px}
+  .src{background:#f4f2ec;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14px;line-height:1.9;white-space:pre-wrap}
+  .rung{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:12px 0}
+  .rung.final{border:1px solid #1d9e75;background:#f3faf7}
+  .tag{display:inline-block;font-size:11px;padding:2px 9px;border-radius:20px;font-weight:500;margin-left:6px}
+  .tag-n{background:#f1efe8;color:#444441}
+  .tag-bad{background:#fcebeb;color:#791f1f}
+  .tag-ok{background:#e1f5ee;color:#085041}
+  .out{font-size:14px;line-height:1.85;margin:6px 0 4px}
+  .bad{background:#fcebeb;color:#791f1f;padding:0 3px;border-radius:3px;font-weight:500}
+  .ok{background:#e1f5ee;color:#085041;padding:0 3px;border-radius:3px;font-weight:500}
+  .note{font-size:13px;color:var(--muted);margin:6px 0 0}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top;color:var(--ink)}
+  th{background:#f0eef9;font-weight:500;color:#3c3489}
+  ul{font-size:14.5px;margin:8px 0;padding-left:20px;color:var(--ink)} li{margin:5px 0}
+  code{background:#efedfb;color:#3c3489;padding:1px 5px;border-radius:5px;font-size:13px}
+  .vote{font-size:22px;font-weight:600;color:#a32d2d}
+  footer{margin-top:42px;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>実行例：4段ラダーを実際に走らせた記録</h1>
+  <div class="meta">2026-06-27 ／ 原文: <code>protocol-sample.md</code>（合成ダミー） ／ 方向: JA→EN ／ モデル: Claude（Claude Code・Anthropic API） ／ <a href="index.html">← 設計の概要に戻る</a></div>
+</header>
+
+<p class="lede">ct-translate のハーネスで、<b>同じ原文に層を1つずつ足して</b>翻訳し、各段の差を記録した実走ログ。最後に逆翻訳投票（DW）が、用語集適用後も残った誤りを<b>独立3体の全会一致で検出</b>した。<span class="bad">赤＝用語集からの逸脱</span> / <span class="ok">緑＝準拠・修正済み</span>。</p>
+
+<h2>原文（JA）</h2>
+<div class="src">本治験は、被験者における治験薬 ABC-123 の有効性及び安全性を評価することを目的とする。
+治験薬の初回投与後24時間以内に重篤な有害事象が発現した場合、被験者は速やかに治験責任医師に連絡しなければならない。
+治験責任医師は、すべての有害事象を治験依頼者に報告し、必要に応じて効果安全性評価委員会の判断を仰ぐこと。
+本治験実施計画書からの逸脱は、事前に治験依頼者の承認を得た場合を除き、認められない。</div>
+
+<h2>用語集（抜粋・P0 顧客指定＝最優先）</h2>
+<table>
+<tr><th>JA</th><th>EN（指定）</th><th>禁止</th></tr>
+<tr><td>治験</td><td>clinical trial</td><td>"study" 単独</td></tr>
+<tr><td>治験薬</td><td>investigational product (IP)</td><td>"study drug"</td></tr>
+<tr><td>治験責任医師</td><td>investigator</td><td>"principal investigator"</td></tr>
+<tr><td>被験者</td><td>subject</td><td>"patient"</td></tr>
+<tr><td>重篤な有害事象</td><td>serious adverse event (SAE)</td><td>—</td></tr>
+</table>
+
+<h2>4段の結果</h2>
+
+<div class="rung">
+<h3>0 素訳 <span class="tag tag-n">用語集なし・検証なし</span> <span class="tag tag-bad">用語逸脱 3-4</span></h3>
+<p class="out">This <span class="bad">study</span> aims to evaluate the efficacy and safety of the investigational <span class="bad">drug</span> ABC-123 in subjects. … the subject must promptly contact the investigator. … Deviations from this clinical <span class="bad">study</span> protocol are not permitted…</p>
+<p class="note">文法は正しいが、P0 訳語とズレる。<code>study</code>（治験）・<code>investigational drug</code>（指定は investigational product (IP)）・略号 SAE/IP の欠落。義務（must/shall）と「24時間」は保持。</p>
+</div>
+
+<div class="rung">
+<h3>1 ＋用語集 <span class="tag tag-ok">grep 注入</span> <span class="tag tag-bad">用語逸脱 1</span></h3>
+<p class="out">This <span class="bad">study</span> is intended to evaluate the efficacy and safety of the <span class="ok">investigational product (IP)</span> ABC-123 in subjects. … seek the judgment of the <span class="ok">Data and Safety Monitoring Board (DSMB)</span>. …</p>
+<p class="note">用語がほぼ矯正（IP / investigator / SAE / DSMB）。<b>ただし主語の <span class="bad">"This study"</span> だけ滑り込んだ</b>——用語集適用後も残る典型的な残存エラー。</p>
+</div>
+
+<div class="rung">
+<h3>2 ＋SKILL <span class="tag tag-ok">Mode判定・出典・義務保存</span> <span class="tag tag-n">冗長アーティファクト</span></h3>
+<p class="out">…this <span class="ok">clinical trial</span>… <code>&lt;!-- src: protocol-sample.md L1 --&gt;</code>（出典コメント付き、義務は must で保存）</p>
+<p class="note">"study" は <span class="ok">clinical trial</span> に解消。ただし<b>第1文が重複生成</b>（プロセスを足すと冗長が出る例）→ 整合工程④の必要性を裏付け。</p>
+</div>
+
+<div class="rung final">
+<h3>3 ＋DW（逆翻訳投票） <span class="tag tag-ok">独立3体が検証</span> <span class="tag tag-ok">用語逸脱 0</span></h3>
+<p class="out">This <span class="ok">clinical trial</span> aims to evaluate the efficacy and safety of the <span class="ok">investigational product (IP)</span> ABC-123 in subjects. …（投票で残存 "study" を矯正済み）</p>
+<p class="note">下書きを独立3体が日本語に逆翻訳して照合 → <b>投票で残った誤りを自動検出</b>（下記）。</p>
+</div>
+
+<h2>DW＝逆翻訳投票の中身</h2>
+<p>投票結果：<span class="vote">3 / 3 不一致</span>（全会一致で要修正）</p>
+<table>
+<tr><th>検証者</th><th>判定</th><th>検出した点</th></tr>
+<tr><td>verifier 1</td><td>不一致</td><td>第1文 <span class="bad">"This study"</span> → "This clinical trial"／"is intended to" が「目的とする」より弱い → "aims to"</td></tr>
+<tr><td>verifier 2</td><td>不一致</td><td>第1文 <span class="bad">"This study"</span> ＝禁止訳 "study" 単独</td></tr>
+<tr><td>verifier 3</td><td>不一致</td><td>同上に加え、<b>委員会名 DSMB が Protocol 正式名と一致するか</b>を提起（人手で見落としやすい点）</td></tr>
+</table>
+<p class="note">3体は独立インスタンス＝独立票。全員が <span class="bad">"study"</span> 残存を捕捉し、1体はさらに深い確認点を提起した（独立検証の多様性の効果）。義務（must/shall）・数値（24時間）・他の禁止訳の混入は全員「問題なし」。</p>
+
+<h2>確定訳（DRAFT・DW 反映後）</h2>
+<div class="src">This <span class="ok">clinical trial</span> aims to evaluate the efficacy and safety of the <span class="ok">investigational product (IP)</span> ABC-123 in subjects.
+If a serious adverse event (SAE) occurs within 24 hours after the first administration of the investigational product (IP), the subject must promptly contact the investigator.
+The investigator shall report all adverse events (AEs) to the sponsor and, where necessary, seek the judgment of the Data and Safety Monitoring Board (DSMB).
+Deviations from this protocol are not permitted except where the prior approval of the sponsor has been obtained.</div>
+
+<h2>各層の寄与（この実走でわかったこと）</h2>
+<ul>
+<li><b>用語集</b>：0段の P0 逸脱 3-4 → 1段で 1 に激減。用語ブレ（人手修正の主因）を<b>決定論で潰す</b>。</li>
+<li><b>DW（逆翻訳投票）</b>：用語集適用後も残った <span class="bad">"This study"</span> を<b>全会一致で検出</b>。さらに 1体が委員会名の確認という<b>人手では見落としやすい点</b>を提起。</li>
+<li><b>SKILL の副作用</b>：2段で第1文が重複生成 → プロセスを足すと冗長も出る。整合工程の必要性を裏付け。</li>
+<li>つまり<b>用語集＝再現性のある底上げ、DW＝取りこぼしの検出</b>、と役割が分かれる。</li>
+</ul>
+
+<h2>⑤⑥ 人間の番（HITL）</h2>
+<p>この DRAFT に対し、<b>委員会名 DSMB が当該 Protocol の正式英名と一致するか</b>だけ確認 → OK なら <code>git commit</code> で CONFIRMED（＝監査証跡が確定）。これが人間の承認ゲート。</p>
+
+<footer>
+ct-translate 実走ログ。合成ダミーのみ・秘密情報なし。サブエージェントの逆翻訳投票は Claude（Claude Code / Anthropic API）で実行。<br>
+関連: <a href="index.html">設計の概要（index）</a> ／ <code>experiments/run-log.md</code>（数値ログ） ／ <code>output/protocol-sample.en.md</code>（DRAFT 訳）
+</footer>
+</div>
+</body>
+</html>
