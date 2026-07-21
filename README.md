@@ -14,6 +14,8 @@ Foundry/Azure を使わず、**Claude Code だけ**で「用語集準拠 ＋ 逆
 | `memory.md` | 翻訳メモリ（確定対訳を追記＝フライホイール） |
 | `experiments/run-log.md` | 4 段ラダーの比較記録 |
 
+> 📖 **なぜ `glossary/*.md` という方式を選んだか**は [GROUNDING.md](GROUNDING.md) を参照 — グラウンディング5方式（用語集/Dynamic Dictionary/Custom Translator/AdaptCT/AI Search RAG）の比較と、①を選んだ理由・③④⑤に進む分岐点を整理。
+
 ## 使い方 — 4 段ラダーで「何がどれだけ効くか」を測る
 
 このフォルダで Claude Code を開き、**同じ原文**に対して順に投げる:
