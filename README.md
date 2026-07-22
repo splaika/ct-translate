@@ -15,6 +15,8 @@ Foundry/Azure を使わず、**Claude Code だけ**で「用語集準拠 ＋ 逆
 | `experiments/run-log.md` | 4 段ラダーの比較記録 |
 
 > 📖 **なぜ `glossary/*.md` という方式を選んだか**は [GROUNDING.md](GROUNDING.md) を参照 — グラウンディング5方式（用語集/Dynamic Dictionary/Custom Translator/AdaptCT/AI Search RAG）の比較と、①を選んだ理由・③④⑤に進む分岐点を整理。
+>
+> 🖥 **このハーネスの出力を人が裁くレビュー画面をどう作るか**は [REVIEW_APP.md](REVIEW_APP.md) を参照 — CAT ツールの型（TM/termbase/QA/QE/LQA・MQM/triage）を継承し、`memory.md`＝TM・`glossary/`＝termbase・逆翻訳投票＝QE 素材、として既存資産を画面に載せる考え方を整理。
 
 ## 使い方 — 4 段ラダーで「何がどれだけ効くか」を測る
 
